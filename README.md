@@ -1,231 +1,397 @@
 # ExplorerBgTool
-Let your Explorer have a custom background image for Windows 11 and WIndows 10
+
+Windows 10/11 资源管理器背景图工具 (Explorer background image tool for Windows 10/11)
+
+---
+
+## 中文文档
+
+### 功能
 
 * 自定义文件资源管理器背景图片
-* 支持多个图片随机
+* 支持多个图片随机切换
 * 可调整图片透明度
 * 可自定义图片显示位置
-* 支持单独为某个路径设置背景图片
+* 支持为指定路径单独设置背景图片
 
-#
-* Customize Explorer ItemView background image
-* Supports random switching of multiple pictures
-* Adjustable picture alpha
-* Customizable image display position
-* Support setting background image for a path separately
+### 目录
 
-## 目录
-1. [预览 (Overview)](#预览-overview)
-2. [使用方法 (How to use)](#使用方法-how-to-use)
-3. [配置文件 (Config)](#配置文件-config)
-4. [自定义路径 (Custom)](#自定义路径-custom)
-5. [其他 (Other)](#其他-other)
-## 预览 (Overview)
-### Windows 11
+1. 预览
+2. 使用方法
+3. 配置文件
+4. 自定义路径
+5. 兼容性与重启说明
+6. 从源码构建
+7. GitHub Actions 与发布流程
+8. 注意事项
 
-> 右下角 (Bottom right)
+### 预览
+
+#### Windows 11 示例
+
+右下角:
+
 ```ini
 posType=3
 ```
+
 ![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/083434.jpg)
 
-> 居中 (Center)
+居中:
+
 ```ini
 posType=4
 ```
+
 ![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/084016.jpg)
 
-> 缩放和填充 (Zoom and fill)
+缩放并填充:
 
 ```ini
 posType=6
 imgAlpha=140
 ```
+
 ![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/085051.jpg)
 
-### Windows 10
+#### Windows 10 示例
+
 ```ini
 posType=3
 ```
+
 ![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/085552.jpg)
 
-### 文件对话框 (File Dialog)
+#### 文件对话框
+
 ```ini
 [load]
 folderExt=true
 ...
 ```
+
 ![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/163113.jpg)
 
-## 使用方法 (How to use)
-从Release页面下载最新版本压缩包并解压
+### 使用方法
 
-将图像放入 "`Image`" 文件夹
+1. 从 Release 页面下载最新压缩包并解压。
+2. 将图片放入 Image 文件夹。
+3. 运行 Register.cmd。
+4. 重新打开资源管理器窗口。
 
-> 运行 "`注册_Register.cmd`" 文件
+卸载:
 
-然后重新打开您的文件资源管理器窗口即可
+* 运行 Uninstall.cmd。
+* 或手动执行 regsvr32 /u "你的路径/ExplorerBgTool.dll"。
 
-要卸载请运行 "`卸载_Uninstall.cmd`" 文件
+### 配置文件
 
-您也可以使用命令提示符手动注册/卸载
+通过修改 config.ini 调整样式。
 
-> `regsvr32 (/u) "你的路径/ExplorerBgTool.dll"`
-#
-Download the latest version of the zip from the Release page and unzip it
-
-Put your image in the `"image"` folder
-
-> Run the "`注册_Register.cmd`" file
-
-Just reopen your file explorer window
-
-To uninstall run the "`卸载_Uninstall.cmd`" file
-
-You can also use the command to register or uninstall
-
-> `regsvr32 (/u) "you path/ExplorerBgTool.dll"`
-
-## 配置文件 (Config)
-您可以通过修改 "`config.ini`"来修改一些样式
-
-You can modify some styles by modifying "`config.ini`"
 ```ini
 [load]
-#指定是否在文件对话框中启用
-#Specify whether or not to enable in the file dialog.
+# 指定是否在文件对话框中启用
 folderExt=false
-#指定是否忽略错误(即出现错误不显示错误弹窗)
-#Specify whether or not to ignore errors (i.e. not show error popups when errors occur).
+# 是否忽略错误弹窗
 noerror=false
+
 [image]
-#指定图片是否随机显示 您必须放入至少两张图像
-#Specifies whether the image is displayed randomly, you need to put at least 2 images
+# 是否随机显示图片 (至少 2 张)
 random=true
-#是否启用指定自定义文件夹的图片
-#Enable custom specified folder pictures
+# 是否启用自定义路径图片
 custom=false
-#图片显示位置 0=左上角 1=右上角 2=左下角 3=右下角 4=居中 5=缩放 6=缩放并填充; 默认为3 右下角
-#Image display position
-#0=Left top 1=Right top 2=Left right 3=Right bottom 4=Center 5=Stretch 6=Zoom and fill
+# 图片显示位置
+# 0=左上 1=右上 2=左下 3=右下 4=居中 5=缩放 6=缩放并填充
 posType=0
-#图片的不透明度 范围0-255
-#Alpha 0-255 of image
+# 图片透明度 0-255
 imgAlpha=255
-#自定义图片目录绝对路径 (为空则默认 ./image)
-#Custom image folder absolute path (empty defaults to . /image)
+# 自定义图片目录绝对路径 (为空则默认 ./Image)
 folder=
 ```
 
-修改后 您无需重启文件资源管理器 只需重新打开当前窗口即可
+修改配置后一般无需重启 Explorer，只需重新打开当前窗口。
 
-After modification you don't need to restart file explorer, just reopen the current window
+### 自定义路径
 
-## 自定义路径 (Custom)
-示例 (Example)
+示例:
 
-Config.ini
 ```ini
 [image]
 custom=true
 
-#括号内填入路径 请先将图片放入Image文件夹然后 img= 指定Image文件夹里的文件名 是文件名不是完整路径!
-#Please put the picture in the Image folder first, and then img=specify the file name in the Image folder Is the file name, not the full path!
-#某些特殊文件夹路径是CLSID 例如:
-#Some special folder paths are CLSID For example:
-#此电脑 This PC
-#::{20D04FE0-3AEA-1069-A2D8-08002B30309D}
-#快速访问 Quick access
-#::{679F85CB-0220-4080-B29B-5540CC05AAB6}
-#网络 Network
-#::{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}
+# 某些特殊文件夹路径是 CLSID，例如:
+# 此电脑: ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}
+# 快速访问: ::{679F85CB-0220-4080-B29B-5540CC05AAB6}
+# 网络: ::{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}
 
-#示例 (Example)
 [::{20D04FE0-3AEA-1069-A2D8-08002B30309D}]
 img=myimage.png
 
 [C:\Users\admin\Pictures\Camera Roll]
 img=mypic.png
-#保存文件后 刷新 立即生效(Takes effect as soon as the file is saved)
 ```
-## 注意事项 (Attention)
-图片仅支持`png、jpg`格式 请确保为有效的图片 否则可能引发崩溃!
 
-如果出现崩溃 请按住`ESC`键再打开文件资源管理器(这不会加载图像) 然后卸载本工具或删除不兼容的图像
-#
-The image only supports `png, jpg` format, please make sure it is a valid image, otherwise it may cause a crash!
+保存配置后刷新即可生效。
 
-If there is a crash hold down the `ESC` key and open the file explorer (this will not load the image) then uninstall the tool or delete the incompatible image
-## 其他 (Other)
-有关工具和介绍请访问：
+### 兼容性与重启说明
 
-For tools and introductions, please visit:
+* 已支持现代 x64 Windows 10 / Windows 11 (包含 24H2 已验证可用)
+* 主要目标是 Windows Explorer 与 Explorer 托管的文件对话框
+* 当前发布包为 x64，不是 ARM64 主目标
 
-[winmoes.com](https://winmoes.com/tools/12556.html)
+重启后是否需要重新注册:
 
-## Compatibility
+* 通常不需要，注册信息是持久化写入注册表的
+* 只有在以下情况需要再次运行 Register.cmd:
+* DLL 路径改变
+* 你执行了卸载
+* 系统策略或清理工具移除了注册信息
 
-* Works on modern x64 Windows 10 and Windows 11 (including 24H2 reported working).
-* This project targets Windows Explorer and Explorer-hosted file dialogs.
-* ARM64 is not the primary target for this repository's x64 release package.
+### 从源码构建
 
-### After reboot
+要求:
 
-You do not need to run Register.cmd after every reboot.
+* Visual Studio 2022 (Desktop development with C++)
+* MSBuild v143 工具集
 
-Registration is persistent through COM and Explorer extension registry entries. Run Register.cmd again only if:
-
-* the DLL path changed,
-* you unregistered the component,
-* system policy or cleanup removed registry entries.
-
-## Build from source
-
-Requirements:
-
-* Visual Studio 2022 with C++ Desktop Development workload
-* MSBuild v143 toolset
-
-Build command:
+命令:
 
 ```powershell
 msbuild ExplorerBgTool.sln /m /p:Configuration=Release /p:Platform=x64
 ```
 
-Output directory:
+输出目录:
 
 ```text
 Build/Release/x64/
 ```
 
-## GitHub Actions
+### GitHub Actions 与发布流程
 
-This repo now includes:
+仓库包含:
 
-* `.github/workflows/ci.yml`
-	Builds `Release|x64` on push to `main` and on pull requests.
-	Uploads `Build/Release/x64` as a workflow artifact.
+* .github/workflows/ci.yml
+  在 main push 和 PR 时构建 Release|x64，并上传构建产物。
 
-* `.github/workflows/release.yml`
-	Triggers on tags matching `v*`.
-	Builds `Release|x64`.
-	Creates `ExplorerBgTool-<tag>-win-x64.zip` from `Build/Release/x64`.
-	Publishes/updates the GitHub Release and uploads the zip.
+* .github/workflows/release.yml
+  在推送 v* 标签时自动构建并打包 ExplorerBgTool-{tag}-win-x64.zip，随后发布到 GitHub Release。
 
-## Release process
+发布步骤:
 
-1. Commit changes and update `CHANGELOG.md`.
-2. Create and push a version tag, for example:
+* 提交代码并更新 CHANGELOG.md。
+* 创建并推送标签，例如:
 
 ```powershell
 git tag v1.1.1
 git push origin v1.1.1
 ```
 
-3. Wait for the `Release` workflow to complete.
-4. Verify the Release page includes the generated zip asset.
+* 等待 Release 工作流完成。
+* 在 Release 页面确认 zip 资源已上传。
 
-## Security and deployment notes
+### 注意事项
 
-* Shell extensions can be blocked by enterprise security policies (WDAC/AppLocker/Smart App Control).
-* If loading fails only on managed devices, verify policy and code-signing requirements.
+* 仅支持 png/jpg 图片，请确保图片有效，否则可能崩溃。
+* 若出现崩溃，按住 ESC 再打开资源管理器可临时跳过加载，然后卸载或删除不兼容图片。
+* 在企业环境下，WDAC/AppLocker/Smart App Control 可能阻止 shell 扩展加载。
+
+其他信息:
+
+[winmoes.com](https://winmoes.com/tools/12556.html)
+
+---
+
+## English Documentation
+
+### Features
+
+* Customize File Explorer background images
+* Random switching between multiple images
+* Adjustable image alpha
+* Custom image position modes
+* Per-path custom image mapping
+
+### Contents
+
+1. Overview
+2. How to use
+3. Config file
+4. Custom paths
+5. Compatibility and reboot behavior
+6. Build from source
+7. GitHub Actions and release flow
+8. Notes
+
+### Overview
+
+#### Windows 11 Preview
+
+Bottom-right:
+
+```ini
+posType=3
+```
+
+![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/083434.jpg)
+
+Center:
+
+```ini
+posType=4
+```
+
+![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/084016.jpg)
+
+Zoom and fill:
+
+```ini
+posType=6
+imgAlpha=140
+```
+
+![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/085051.jpg)
+
+#### Windows 10 Preview
+
+```ini
+posType=3
+```
+
+![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/085552.jpg)
+
+#### File dialog
+
+```ini
+[load]
+folderExt=true
+...
+```
+
+![image](https://github.com/Maplespe/explorerTool/blob/main/Screenshot/163113.jpg)
+
+### How to use
+
+1. Download the latest zip from Releases and extract it.
+2. Put images into the Image folder.
+3. Run Register.cmd.
+4. Reopen Explorer windows.
+
+Uninstall:
+
+* Run Uninstall.cmd.
+* Or run regsvr32 /u "your-path/ExplorerBgTool.dll" manually.
+
+### Config file
+
+Edit config.ini to control behavior:
+
+```ini
+[load]
+# Enable extension in file dialogs
+folderExt=false
+# Suppress error popups
+noerror=false
+
+[image]
+# Random image mode (requires at least 2 images)
+random=true
+# Enable per-path custom images
+custom=false
+# Position mode
+# 0=left-top 1=right-top 2=left-bottom 3=right-bottom 4=center 5=stretch 6=zoom-fill
+posType=0
+# Alpha from 0 to 255
+imgAlpha=255
+# Absolute image folder path (empty means ./Image)
+folder=
+```
+
+Usually you do not need to restart Explorer after config changes; reopening the current window is enough.
+
+### Custom paths
+
+Example:
+
+```ini
+[image]
+custom=true
+
+# Some special folders use CLSID paths, for example:
+# This PC: ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}
+# Quick Access: ::{679F85CB-0220-4080-B29B-5540CC05AAB6}
+# Network: ::{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}
+
+[::{20D04FE0-3AEA-1069-A2D8-08002B30309D}]
+img=myimage.png
+
+[C:\Users\admin\Pictures\Camera Roll]
+img=mypic.png
+```
+
+Changes apply after saving and refreshing.
+
+### Compatibility and reboot behavior
+
+* Works on modern x64 Windows 10 and Windows 11 (including 24H2 reported working)
+* Targets Windows Explorer and Explorer-hosted dialogs
+* Current release package targets x64, not ARM64-first
+
+Do I need to run Register.cmd again after reboot?
+
+* Normally no. Registration is persistent.
+* Re-register only if:
+* DLL location changed
+* You ran uninstall
+* Policy/cleanup removed registry entries
+
+### Build from source
+
+Requirements:
+
+* Visual Studio 2022 with Desktop development with C++
+* MSBuild v143 toolset
+
+Build:
+
+```powershell
+msbuild ExplorerBgTool.sln /m /p:Configuration=Release /p:Platform=x64
+```
+
+Output:
+
+```text
+Build/Release/x64/
+```
+
+### GitHub Actions and release flow
+
+Included workflows:
+
+* .github/workflows/ci.yml
+  Builds Release|x64 on main pushes and pull requests. Uploads build artifacts.
+
+* .github/workflows/release.yml
+  Runs on v* tags, builds Release|x64, packages ExplorerBgTool-{tag}-win-x64.zip, and publishes a GitHub Release.
+
+Release steps:
+
+* Commit changes and update CHANGELOG.md.
+* Create and push a version tag, for example:
+
+```powershell
+git tag v1.1.1
+git push origin v1.1.1
+```
+
+* Wait for the Release workflow.
+* Verify the uploaded zip in the Release page.
+
+### Notes
+
+* Only png/jpg are supported. Invalid images can crash Explorer.
+* If Explorer crashes, hold ESC while opening Explorer to skip image loading, then uninstall or remove bad images.
+* In managed enterprise environments, WDAC/AppLocker/Smart App Control may block shell extensions.
+
+More info:
+
+[winmoes.com](https://winmoes.com/tools/12556.html)

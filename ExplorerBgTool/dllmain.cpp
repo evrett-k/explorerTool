@@ -117,8 +117,17 @@ struct Config
     *  4 = Center
     *  5 = Zoom
     *  6 = Zoom Fill
+    *  7 = Left center
+    *  8 = Right center
+    *  9 = Top center
+    * 10 = Bottom center
     */
     int imgPosMode = 0;                 //图片定位方式 Image position mode type
+    int imgOffsetX = 0;                 //图片X偏移 Image X offset
+    int imgOffsetY = 0;                 //图片Y偏移 Image Y offset
+    int imgScalePercent = 100;          //图片缩放百分比 Image scale percent (1-1000)
+    int imgWidth = 0;                   //目标宽 (0=自动) Target width (0 = auto)
+    int imgHeight = 0;                  //目标高 (0=自动) Target height (0 = auto)
     bool isRandom = true;               //随机显示图片 Random pictures
     bool isCustom = false;              //自定义文件夹图片
     bool noerror = false;               //不显示错误
@@ -153,6 +162,20 @@ HWND GetHWNDFromDUIList(T& list, HDC dc, MyData::data& data)
 
 extern bool InjectionEntryPoint();      //注入入口点
 extern void LoadSettings(bool loadimg); //加载dll设置
+
+static int ParseIntOrDefault(const std::wstring& value, int defaultValue)
+{
+    if (value.empty())
+        return defaultValue;
+    try
+    {
+        return std::stoi(value);
+    }
+    catch (...)
+    {
+        return defaultValue;
+    }
+}
 
 bool ShouldLoad()
 {
@@ -235,22 +258,28 @@ void LoadSettings(bool loadimg)
 
     //图片定位方式
     std::wstring str = GetIniString(cfgPath, L"image", L"posType");
-    if (str.empty()) str = L"0";
-    m_config.imgPosMode = std::stoi(str);
-    if (m_config.imgPosMode < 0 || m_config.imgPosMode > 6)
+    m_config.imgPosMode = ParseIntOrDefault(str, 3);
+    if (m_config.imgPosMode < 0 || m_config.imgPosMode > 10)
         m_config.imgPosMode = 3;
+
+    m_config.imgOffsetX = ParseIntOrDefault(GetIniString(cfgPath, L"image", L"offsetX"), 0);
+    m_config.imgOffsetY = ParseIntOrDefault(GetIniString(cfgPath, L"image", L"offsetY"), 0);
+
+    m_config.imgScalePercent = ParseIntOrDefault(GetIniString(cfgPath, L"image", L"imgScale"), 100);
+    if (m_config.imgScalePercent < 1) m_config.imgScalePercent = 1;
+    if (m_config.imgScalePercent > 1000) m_config.imgScalePercent = 1000;
+
+    m_config.imgWidth = ParseIntOrDefault(GetIniString(cfgPath, L"image", L"imgWidth"), 0);
+    m_config.imgHeight = ParseIntOrDefault(GetIniString(cfgPath, L"image", L"imgHeight"), 0);
+    if (m_config.imgWidth < 0) m_config.imgWidth = 0;
+    if (m_config.imgHeight < 0) m_config.imgHeight = 0;
 
     //图片透明度
     str = GetIniString(cfgPath, L"image", L"imgAlpha");
-    if (str.empty())
-        m_config.imgAlpha = 255;
-    else
-    {
-        int alpha = std::stoi(str);
-        if (alpha > 255) alpha = 255;
-        if (alpha < 0) alpha = 0;
-        m_config.imgAlpha = (BYTE)alpha;
-    }
+    int alpha = ParseIntOrDefault(str, 255);
+    if (alpha > 255) alpha = 255;
+    if (alpha < 0) alpha = 0;
+    m_config.imgAlpha = (BYTE)alpha;
 
     //加载图像 Load Image
     if (loadimg) {
@@ -512,29 +541,62 @@ int MyFillRect(HDC hDC, const RECT* lprc, HBRUSH hbr)
 
             BitmapGDI* pBgBmp = m_config.imageList[_data.imgIndex].bmp;
 
+            static auto calcAspectRatio = [](int fromWidth, int fromHeight, int toWidthOrHeight, bool isWidth)
+            {
+                if (isWidth) {
+                    return (int)round(((float)fromHeight * ((float)toWidthOrHeight / (float)fromWidth)));
+                }
+                return (int)round(((float)fromWidth * ((float)toWidthOrHeight / (float)fromHeight)));
+            };
+
             //计算图片位置 Calculate picture position
             POINT pos;
             SIZE dstSize = { pBgBmp->Size.cx, pBgBmp->Size.cy };
+
+            //缩放控制 (不作用于 Zoom / Zoom Fill 模式)
+            if (m_config.imgPosMode != 5 && m_config.imgPosMode != 6)
+            {
+                if (m_config.imgWidth > 0 && m_config.imgHeight > 0)
+                {
+                    dstSize = { m_config.imgWidth, m_config.imgHeight };
+                }
+                else if (m_config.imgWidth > 0)
+                {
+                    dstSize.cx = m_config.imgWidth;
+                    dstSize.cy = calcAspectRatio(pBgBmp->Size.cx, pBgBmp->Size.cy, dstSize.cx, true);
+                }
+                else if (m_config.imgHeight > 0)
+                {
+                    dstSize.cy = m_config.imgHeight;
+                    dstSize.cx = calcAspectRatio(pBgBmp->Size.cx, pBgBmp->Size.cy, dstSize.cy, false);
+                }
+                else if (m_config.imgScalePercent != 100)
+                {
+                    dstSize.cx = (pBgBmp->Size.cx * m_config.imgScalePercent) / 100;
+                    dstSize.cy = (pBgBmp->Size.cy * m_config.imgScalePercent) / 100;
+                }
+            }
+
             switch (m_config.imgPosMode)
             {
             case 0://左上
                 pos = { 0, 0 };
                 break;
             case 1://右上
-                pos.x = wndSize.cx - pBgBmp->Size.cx;
+                pos.x = wndSize.cx - dstSize.cx;
                 pos.y = 0;
                 break;
             case 2://左下
                 pos.x = 0;
-                pos.y = wndSize.cy - pBgBmp->Size.cy;
+                pos.y = wndSize.cy - dstSize.cy;
                 break;
             case 3://右下
-                pos.x = wndSize.cx - pBgBmp->Size.cx;
-                pos.y = wndSize.cy - pBgBmp->Size.cy;
+                pos.x = wndSize.cx - dstSize.cx;
+                pos.y = wndSize.cy - dstSize.cy;
                 break;
             case 4://居中正常顯示
-                pos.x = (wndSize.cx - pBgBmp->Size.cx) >> 1;
-                pos.y = (wndSize.cy - pBgBmp->Size.cy) >> 1;
+                pos.x = (wndSize.cx - dstSize.cx) >> 1;
+                pos.y = (wndSize.cy - dstSize.cy) >> 1;
                 break;
             case 5://缩放
                   {
@@ -548,16 +610,6 @@ int MyFillRect(HDC hDC, const RECT* lprc, HBRUSH hbr)
                   break;
             case 6://缩放并填充
                  {
-                     static auto calcAspectRatio = [](int fromWidth, int fromHeight, int toWidthOrHeight, bool isWidth)
-                     {
-                         if (isWidth) {
-                             return (int)round(((float)fromHeight * ((float)toWidthOrHeight / (float)fromWidth)));
-                         }
-                         else {
-                             return (int)round(((float)fromWidth * ((float)toWidthOrHeight / (float)fromHeight)));
-                         }
-                     };
-
                      //按高等比例拉伸
                      int newWidth = calcAspectRatio(pBgBmp->Size.cx, pBgBmp->Size.cy, wndSize.cy, false);
                      int newHeight = wndSize.cy;
@@ -579,11 +631,30 @@ int MyFillRect(HDC hDC, const RECT* lprc, HBRUSH hbr)
                      dstSize = { newWidth, newHeight };
                  }
                 break;
+            case 7://左中
+                pos.x = 0;
+                pos.y = (wndSize.cy - dstSize.cy) >> 1;
+                break;
+            case 8://右中
+                pos.x = wndSize.cx - dstSize.cx;
+                pos.y = (wndSize.cy - dstSize.cy) >> 1;
+                break;
+            case 9://上中
+                pos.x = (wndSize.cx - dstSize.cx) >> 1;
+                pos.y = 0;
+                break;
+            case 10://下中
+                pos.x = (wndSize.cx - dstSize.cx) >> 1;
+                pos.y = wndSize.cy - dstSize.cy;
+                break;
             default://默認右下
-                pos.x = wndSize.cx - pBgBmp->Size.cx;
-                pos.y = wndSize.cy - pBgBmp->Size.cy;
+                pos.x = wndSize.cx - dstSize.cx;
+                pos.y = wndSize.cy - dstSize.cy;
                 break;
             }
+
+            pos.x += m_config.imgOffsetX;
+            pos.y += m_config.imgOffsetY;
 
             /*绘制图片 Paint image*/
             BLENDFUNCTION bf = { AC_SRC_OVER, 0, m_config.imgAlpha, AC_SRC_ALPHA };

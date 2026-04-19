@@ -90,21 +90,40 @@ folderExt=true
 
 ```ini
 [load]
-# 指定是否在文件对话框中启用
+# 在文件对话框中启用扩展
 folderExt=false
-# 是否忽略错误弹窗
+
+# 发生错误时不弹窗
 noerror=false
 
 [image]
-# 是否随机显示图片 (至少 2 张)
-random=true
-# 是否启用自定义路径图片
+# 随机图片模式 (至少需要 2 张图)
+random=false
+
+# 启用按路径匹配自定义图片
 custom=false
-# 图片显示位置
-# 0=左上 1=右上 2=左下 3=右下 4=居中 5=缩放 6=缩放并填充
-posType=0
-# 图片透明度 0-255
+
+# 位置模式:
+# 0=左上 1=右上 2=左下 3=右下
+# 4=居中 5=拉伸 6=缩放填充
+# 7=左中 8=右中 9=上中 10=下中
+posType=3
+
+# 透明度 0-255
 imgAlpha=255
+
+# 在定位后追加像素偏移
+offsetX=0
+offsetY=0
+
+# 尺寸控制 (posType=5/6 时忽略)
+# imgScale: 百分比缩放 (100=原尺寸)
+# imgWidth/imgHeight: 像素强制尺寸 (0=自动)
+# 优先级: 宽高都设 > 仅宽 > 仅高 > 缩放百分比
+imgScale=100
+imgWidth=0
+imgHeight=0
+
 # 自定义图片目录绝对路径 (为空则默认 ./Image)
 folder=
 ```
@@ -289,19 +308,38 @@ Edit config.ini to control behavior:
 [load]
 # Enable extension in file dialogs
 folderExt=false
+
 # Suppress error popups
 noerror=false
 
 [image]
 # Random image mode (requires at least 2 images)
-random=true
+random=false
+
 # Enable per-path custom images
 custom=false
-# Position mode
-# 0=left-top 1=right-top 2=left-bottom 3=right-bottom 4=center 5=stretch 6=zoom-fill
-posType=0
+
+# Position mode:
+# 0=left-top 1=right-top 2=left-bottom 3=right-bottom
+# 4=center 5=stretch 6=zoom-fill
+# 7=left-center 8=right-center 9=top-center 10=bottom-center
+posType=3
+
 # Alpha from 0 to 255
 imgAlpha=255
+
+# Pixel offsets applied after position calculation
+offsetX=0
+offsetY=0
+
+# Size controls (ignored in posType=5/6)
+# imgScale: percent size (100 = original)
+# imgWidth/imgHeight: pixel override (0 = auto)
+# Priority: width+height > width only > height only > scale
+imgScale=100
+imgWidth=0
+imgHeight=0
+
 # Absolute image folder path (empty means ./Image)
 folder=
 ```

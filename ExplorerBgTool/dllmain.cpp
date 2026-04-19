@@ -14,6 +14,7 @@
 #include <random>
 #include <iostream>
 #include <mutex>
+#include <cwctype>
 
 //GDI 相关 Using GDI
 #include <comdef.h>
@@ -155,17 +156,21 @@ extern void LoadSettings(bool loadimg); //加载dll设置
 
 bool ShouldLoad()
 {
-    wchar_t pName[MAX_PATH];
-    GetModuleFileNameW(NULL, pName, MAX_PATH);
-    //进程名转小写
-    std::wstring path = std::wstring(pName);
-    if (path.length() > 12)
-    {
-        std::wstring name = path.substr(path.length() - 12, 12);
-        std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-        if (name == L"explorer.exe")
-            return true;
-    }
+    wchar_t pName[MAX_PATH]{};
+    if (GetModuleFileNameW(NULL, pName, MAX_PATH) == 0)
+        return false;
+
+    //仅按进程名判断，避免路径长度和大小写导致误判
+    std::wstring path = pName;
+    const size_t pos = path.find_last_of(L"\\/");
+    std::wstring name = (pos == std::wstring::npos) ? path : path.substr(pos + 1);
+    std::transform(name.begin(), name.end(), name.begin(), [](wchar_t ch) {
+        return static_cast<wchar_t>(towlower(ch));
+    });
+
+    if (name == L"explorer.exe")
+        return true;
+
     if (GetIniString(GetCurDllDir() + L"\\config.ini", L"load", L"folderExt") == L"true")
     {
         if (GetModuleHandleW(L"SettingSyncHost.exe")
@@ -189,7 +194,7 @@ bool ShouldLoad()
         return true;
     }
 
-    return GetModuleHandleW(L"regsvr32.exe");
+    return name == L"regsvr32.exe";
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,
@@ -376,9 +381,13 @@ void OnDocComplete(std::wstring path, DWORD threadID)
         {
             if (m_config.imageList[i].fileName == fileName)
             {
-                auto iter = m_duiList[threadID].duiList.end();
-                --iter;
-                iter->second.imgIndex = i;
+                auto& duiList = m_duiList[threadID].duiList;
+                if (!duiList.empty())
+                {
+                    auto iter = duiList.end();
+                    --iter;
+                    iter->second.imgIndex = static_cast<int>(i);
+                }
                 break;
             }
         }

@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build x64 Release
+        run: msbuild ExplorerBgTool.sln /m /p:Configuration=Release /p:Platform=x64
+
+      - name: Package release zip
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $zipName = "ExplorerBgTool-$tag-win-x64.zip"
+          if (Test-Path $zipName) { Remove-Item $zipName -Force }
+          Compress-Archive -Path "Build/Release/x64/*" -DestinationPath $zipName -CompressionLevel Optimal
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ExplorerBgTool-${{ github.ref_name }}-win-x64.zip
+          generate_release_notes: true

@@ -1,8 +1,34 @@
-@ECHO OFF
+@echo off
+setlocal
 
-%1 mshta vbscript:CreateObject("Shell.Application").ShellExecute("cmd.exe","/c ""%~s0"" ::","","runas",1)(window.close)&&exit
+net session >nul 2>&1
+if not "%errorlevel%"=="0" (
+	echo Requesting administrator privileges...
+	powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%ComSpec%' -ArgumentList '/k ""%~f0"" elevated' -Verb RunAs"
+	exit /b
+)
+
 cd /d "%~dp0"
 
-regsvr32 "%~dp0ExplorerBgTool.dll"
-taskkill /f /im explorer.exe & start explorer.exe
+if not exist "%~dp0ExplorerBgTool.dll" (
+	echo [ERROR] ExplorerBgTool.dll not found in:
+	echo %~dp0
+	echo.
+	pause
+	exit /b 1
+)
+
+echo Registering ExplorerBgTool.dll...
+"%SystemRoot%\System32\regsvr32.exe" "%~dp0ExplorerBgTool.dll"
+if errorlevel 1 (
+	echo [ERROR] Registration failed.
+	pause
+	exit /b 1
+)
+
+echo Restarting Explorer...
+taskkill /f /im explorer.exe >nul 2>&1
+start explorer.exe
+
+echo [OK] Registration completed.
 pause

@@ -162,3 +162,70 @@ If there is a crash hold down the `ESC` key and open the file explorer (this wil
 For tools and introductions, please visit:
 
 [winmoes.com](https://winmoes.com/tools/12556.html)
+
+## Compatibility
+
+* Works on modern x64 Windows 10 and Windows 11 (including 24H2 reported working).
+* This project targets Windows Explorer and Explorer-hosted file dialogs.
+* ARM64 is not the primary target for this repository's x64 release package.
+
+### After reboot
+
+You do not need to run Register.cmd after every reboot.
+
+Registration is persistent through COM and Explorer extension registry entries. Run Register.cmd again only if:
+
+* the DLL path changed,
+* you unregistered the component,
+* system policy or cleanup removed registry entries.
+
+## Build from source
+
+Requirements:
+
+* Visual Studio 2022 with C++ Desktop Development workload
+* MSBuild v143 toolset
+
+Build command:
+
+```powershell
+msbuild ExplorerBgTool.sln /m /p:Configuration=Release /p:Platform=x64
+```
+
+Output directory:
+
+```text
+Build/Release/x64/
+```
+
+## GitHub Actions
+
+This repo now includes:
+
+* `.github/workflows/ci.yml`
+	Builds `Release|x64` on push to `main` and on pull requests.
+	Uploads `Build/Release/x64` as a workflow artifact.
+
+* `.github/workflows/release.yml`
+	Triggers on tags matching `v*`.
+	Builds `Release|x64`.
+	Creates `ExplorerBgTool-<tag>-win-x64.zip` from `Build/Release/x64`.
+	Publishes/updates the GitHub Release and uploads the zip.
+
+## Release process
+
+1. Commit changes and update `CHANGELOG.md`.
+2. Create and push a version tag, for example:
+
+```powershell
+git tag v1.1.1
+git push origin v1.1.1
+```
+
+3. Wait for the `Release` workflow to complete.
+4. Verify the Release page includes the generated zip asset.
+
+## Security and deployment notes
+
+* Shell extensions can be blocked by enterprise security policies (WDAC/AppLocker/Smart App Control).
+* If loading fails only on managed devices, verify policy and code-signing requirements.

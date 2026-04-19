@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build x64 Release
+        run: msbuild ExplorerBgTool.sln /m /p:Configuration=Release /p:Platform=x64
+
+      - name: Upload x64 build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExplorerBgTool-win-x64
+          path: Build/Release/x64/**
+          if-no-files-found: error

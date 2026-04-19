@@ -46,15 +46,19 @@ bool FileIsExist(std::wstring FilePath)
 
 std::wstring GetWindowTitle(HWND hWnd)
 {
-	int size = GetWindowTextLengthW(hWnd);
-	wchar_t* pText = new wchar_t[size];
-	GetWindowTextW(hWnd, pText, size);
-	return std::wstring(pText);
+	const int size = GetWindowTextLengthW(hWnd);
+	if (size <= 0)
+		return std::wstring();
+
+	std::wstring text(static_cast<size_t>(size) + 1, L'\0');
+	GetWindowTextW(hWnd, &text[0], size + 1);
+	text.resize(static_cast<size_t>(size));
+	return text;
 }
 
 std::wstring GetWindowClassName(HWND hWnd)
 {
-	wchar_t* pText = new wchar_t[MAX_PATH];
+	wchar_t pText[MAX_PATH]{};
 	GetClassNameW(hWnd, pText, MAX_PATH);
 	return std::wstring(pText);
 }
@@ -63,15 +67,24 @@ std::wstring GetIniString(std::wstring FilePath, std::wstring AppName, std::wstr
 {
 	if (FileIsExist(FilePath)) {
 		HANDLE pFile = CreateFileW(FilePath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (pFile == INVALID_HANDLE_VALUE)
+			return std::wstring();
+
 		LARGE_INTEGER fileSize;
-		GetFileSizeEx(pFile, &fileSize);
+		if (!GetFileSizeEx(pFile, &fileSize))
+		{
+			CloseHandle(pFile);
+			return std::wstring();
+		}
 
-		wchar_t* data = new wchar_t[fileSize.QuadPart];
-		ZeroMemory(data, sizeof(wchar_t) * fileSize.QuadPart);
-		GetPrivateProfileStringW(AppName.c_str(), KeyName.c_str(), NULL, data, (DWORD)fileSize.QuadPart, FilePath.c_str());
+		DWORD bufferChars = static_cast<DWORD>(fileSize.QuadPart + 2);
+		if (bufferChars < 256)
+			bufferChars = 256;
 
-		std::wstring ret = data;
-		delete[] data;
+		std::wstring data(static_cast<size_t>(bufferChars), L'\0');
+		GetPrivateProfileStringW(AppName.c_str(), KeyName.c_str(), NULL, &data[0], bufferChars, FilePath.c_str());
+
+		std::wstring ret = data.c_str();
 
 		CloseHandle(pFile);
 		return ret;

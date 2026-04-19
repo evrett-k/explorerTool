@@ -57,23 +57,41 @@ ULONG __stdcall CObjectWithSite::Release()
 STDMETHODIMP CObjectWithSite::SetSite(IUnknown* pUnkSite)
 {
 	ReleaseRes();
+	if (!pUnkSite)
+		return S_OK;
+
 	HRESULT hr = pUnkSite->QueryInterface(IID_IWebBrowser2, (void**)&m_web);
-	if (FAILED(hr))
+	if (FAILED(hr) || !m_web)
+	{
 		ReleaseRes();
+		return E_NOINTERFACE;
+	}
 
 	IConnectionPointContainer* cpoint = nullptr;
 
 	hr = m_web->QueryInterface(IID_IConnectionPointContainer, (void**)&cpoint);
-	if (FAILED(hr)) return E_FAIL;
+	if (FAILED(hr) || !cpoint)
+	{
+		ReleaseRes();
+		return E_FAIL;
+	}
 
 	hr = cpoint->FindConnectionPoint(DIID_DWebBrowserEvents2, &m_cpoint);
 	if (FAILED(hr))
 	{
 		cpoint->Release();
+		ReleaseRes();
 		return E_FAIL;
 	}
 
-	m_cpoint->Advise((IUnknown*)new CIDispatch(), &m_cookie);
+	CIDispatch* dispatch = new CIDispatch();
+	hr = m_cpoint->Advise((IUnknown*)dispatch, &m_cookie);
+	dispatch->Release();
+	if (FAILED(hr))
+	{
+		ReleaseRes();
+		return hr;
+	}
 
 	return hr;
 }
